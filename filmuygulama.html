@@ -1,0 +1,91 @@
+const OMDB_API = "http://www.omdbapi.com/?i=tt3896198&apikey=9948d0dc";
+
+// Arama uçları
+const SEARCHAPI = OMDB_API + "&type=movie&s=";           // metinle arama
+const DETAILAPI = OMDB_API + "&plot=full&tomatoes=true&i="; // imdbID ile detay
+
+const main = document.getElementById("main");
+const form = document.getElementById("form");
+const search = document.getElementById("search");
+
+
+filmler("matrix"); 
+
+// arama metni alır, sonuçtaki her imdbID için detay çeker
+async function filmler(query) {
+  const response = await fetch(SEARCHAPI + encodeURIComponent(query));
+  const listData = await response.json();
+
+  const items = Array.isArray(listData.Search) ? listData.Search : [];
+
+  // Her film için detay (RT dahil) çek
+  const detaylar = await Promise.all(
+    items.map(async (m) => {
+      const r = await fetch(DETAILAPI + m.imdbID);
+      return r.json();
+    })
+  );
+
+  filmleriGoster(detaylar);
+}
+
+function filmleriGoster(film) {
+  // boş film bilgisi
+  main.innerHTML = "";
+
+  film.forEach((item) => {
+    const { Poster, Title, Plot, Ratings, Year } = item;
+    const rt = rottenTomatoesYuzde(Ratings); // 0-100 ya da null
+
+    const filmElement = document.createElement("div");
+    filmElement.classList.add("movie");
+
+    filmElement.innerHTML = `
+    <img
+  src="${Poster && Poster !== "N/A" ? Poster : 'images/matrix.png'}"
+  alt="${Title}"
+/>
+
+
+      <div class="movie-info">
+        <h3>${Title} ${Year ? `(${Year})` : ""}</h3>
+        <span class="${filmOranı(rt)}">${rt !== null ? rt + "%" : "N/A"}</span>
+      </div>
+
+      <div class="overview">
+        <h3>Açıklama</h3>
+        ${Plot && Plot !== "N/A" ? Plot : "Özet bulunamadı."}
+      </div>
+    `;
+
+    main.appendChild(filmElement);
+  });
+}
+
+function rottenTomatoesYuzde(ratings) {
+  if (!Array.isArray(ratings)) return null;
+  const rt = ratings.find((r) => r.Source === "Rotten Tomatoes");
+  if (!rt || !rt.Value) return null;
+  // Örn: "87%" -> 87
+  const num = parseInt(rt.Value.replace("%", ""), 10);
+  return Number.isFinite(num) ? num : null;
+}
+// film oran bilgisi (yüzde)
+function filmOranı(oran) {
+  if (oran === null) return "gray";   // N/A durumunda istersen bir gri sınıfı
+  if (oran >= 75) return "green";
+  if (oran >= 60) return "orange";
+  return "red";
+}
+
+
+
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const arananFilm = search.value.trim();
+  if (arananFilm) {
+    filmler(arananFilm);   // TMDB URL'i yerine direkt query veriyoruz
+    search.value = "";
+  }
+});

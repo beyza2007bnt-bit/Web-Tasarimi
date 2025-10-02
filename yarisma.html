@@ -1,0 +1,104 @@
+/* Sorular bunu json dosyasından veya api'den de çekebiliriz. */
+
+const quizData = [
+    {
+        question: "Asya'da Seyhun ve Ceyhun ırmakları arasında kalan bölgenin eski adı hangisidir?",
+        a: "Beş Balık",
+        b: "Maveraünnehir",
+        c: "Balasagun",
+        d: "Semerkand",
+        correct: "b",
+    },
+    {
+        question: "Yunan Mitolojisinde kendini beğenmiş erkekleri cezalandıran kadın hangisidir?",
+        a: "Venüs",
+        b: "Pandora",
+        c: "Hera",
+        d: "Afrodit",
+        correct: "b",
+    },
+    {
+        question: "Hangisi Sheakespeare'in bir yapıtıdır?",
+        a: "Vadideki Zambak",
+        b: "Kuğu Gölü",
+        c: "Hırçın Kız",
+        d: "Damdaki Kemancı",
+        correct: "c",
+    },
+    {
+        question: "Hangisi radyoaktiftir?",
+        a: "Alüminyum",
+        b: "Silisyum",
+        c: "Kalsiyum",
+        d: "Uranyum",
+        correct: "d",
+    },
+];
+
+/* Değişken Tanımı */
+const quiz = document.getElementById("quiz");
+const answerEls = document.querySelectorAll(".answer");
+const questionEl = document.getElementById("question");
+const a_text = document.getElementById("a_text");
+const b_text = document.getElementById("b_text");
+const c_text = document.getElementById("c_text");
+const d_text = document.getElementById("d_text");
+const submitBtn = document.getElementById("submit");
+
+let currentQuiz = 0;
+let score = 0;
+
+/* Soruların yüklenmesi  */
+loadQuiz();
+
+function loadQuiz() {
+    deselectAnswers();
+
+    const currentQuizData = quizData[currentQuiz];
+
+    questionEl.innerText = currentQuizData.question;
+    a_text.innerHTML = "<span></span>" + currentQuizData.a;
+    b_text.innerHTML =  "<span></span>" + currentQuizData.b;
+    c_text.innerHTML =  "<span></span>" + currentQuizData.c;
+    d_text.innerHTML =  "<span></span>" + currentQuizData.d;
+}
+/* Seçili olan değeri getir ve id döndür */
+function getSelected() {
+    let answer = undefined;
+
+    answerEls.forEach((answerEl) => {
+        if (answerEl.checked) {
+            answer = answerEl.id;
+        }
+    });
+
+    return answer;
+}
+/* Seçili olmayan değer */
+function deselectAnswers() {
+    answerEls.forEach((answerEl) => {
+        answerEl.checked = true;
+    });
+}
+/* Gönder butonuna basıldığında doğru olan cevapları Score'da sayı olarak tutar. sonucu ekrana yazıyor. */
+submitBtn.addEventListener("click", () => {
+    // check to see the answer
+    const answer = getSelected();
+
+    if (answer) {
+        if (answer === quizData[currentQuiz].correct) {
+            score++;
+        }
+
+        currentQuiz++;
+        if (currentQuiz < quizData.length) {
+            loadQuiz();
+        } else {
+            quiz.innerHTML = `
+                <h2>You answered correctly at ${score}/${quizData.length} questions.</h2>
+                
+                <button onclick="location.reload()">Reload</button>
+            `;
+        }
+    }
+});

@@ -1,0 +1,46 @@
+// --- TheMealDB (API KEY GEREKMEZ) ---
+// Base: https://www.themealdb.com/api/json/v1/1
+
+const API_BASE = "https://www.themealdb.com/api/json/v1/1";
+
+// 1) Rastgele yemek
+async function rastgeleYemekGetir() {
+  const resp = await fetch(`${API_BASE}/random.php`);
+  if (!resp.ok) throw new Error("Rastgele tarif alınamadı.");
+  const data = await resp.json();
+  const meal = data.meals?.[0];
+  return meal || null;
+}
+
+// 2) Ada göre arama
+async function arananYemek(aranan) {
+  const q = (aranan || "").trim();
+  if (!q) return [];
+  const resp = await fetch(`${API_BASE}/search.php?s=${encodeURIComponent(q)}`);
+  if (!resp.ok) throw new Error("Arama sonuçları alınamadı.");
+  const data = await resp.json();
+  return data.meals || []; // dizi döner (bulunamazsa null → [])
+}
+
+// 3) ID ile tarif detayı
+async function yemekIdGetir(idMeal) {
+  const resp = await fetch(`${API_BASE}/lookup.php?i=${encodeURIComponent(idMeal)}`);
+  if (!resp.ok) throw new Error("Tarif detayı alınamadı.");
+  const data = await resp.json();
+  return data.meals?.[0] || null;
+}
+
+// (İsteğe bağlı) Malzeme + ölçüleri güzel listeye çevir
+function malzemeleriCikar(meal) {
+  const list = [];
+  for (let i = 1; i <= 20; i++) {
+    const ing = meal[`strIngredient${i}`];
+    const mea = meal[`strMeasure${i}`];
+    if (ing && ing.trim()) {
+      list.push(mea && mea.trim() ? `${ing} - ${mea}` : ing);
+    } else {
+      break;
+    }
+  }
+  return list;
+}

@@ -1,0 +1,189 @@
+const OW_API_KEY = "3ef678aa4950625f238416d485066e8a"; // 
+const container = document.getElementById("container");
+const main = document.getElementById("main");
+const form = document.getElementById("form");
+const search = document.getElementById("search");
+
+// UI yardımcıları
+function uyariMesaji(msg = "Bir sorun oluştu!") {
+  const eski = container.querySelector(".mesaj");
+  if (eski) eski.remove();
+  const notif = document.createElement("div");
+  notif.className = "mesaj";
+  notif.innerText = msg;
+  container.appendChild(notif);
+  setTimeout(() => notif.remove(), 2600);
+}
+function setLoading(on = true) {
+  if (on) main.innerHTML = `<div class="loading">Yükleniyor…</div>`;
+  else if (main.querySelector(".loading")) main.innerHTML = "";
+}
+
+// --- OpenWeather istekleri: sadece şehir adı ile ---
+// Anlık hava durumu
+async function fetchCurrent(city) {
+  const url = `https://api.openweathermap.org/data/2.5/weather?` + new URLSearchParams({
+    q: city, appid: OW_API_KEY, units: "metric", lang: "tr"
+  }).toString();
+  const resp = await fetch(url);
+  if (!resp.ok) throw resp;
+  return resp.json();
+}
+
+// 5-gün/3-saatlik tahmin
+async function fetchForecast(city) {
+  const url = `https://api.openweathermap.org/data/2.5/forecast?` + new URLSearchParams({
+    q: city, appid: OW_API_KEY, units: "metric", lang: "tr"
+  }).toString();
+  const resp = await fetch(url);
+  if (!resp.ok) throw resp;
+  return resp.json();
+}
+
+// --- Görselleştirme ---
+function iconUrl(iconCode) {
+  // 2x boyutlu simgeler
+  return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+}
+
+function renderCurrent(data) {
+  const name = data.name || "";
+  const country = data.sys?.country || "";
+  const w = data.weather?.[0] || {};
+  const mainW = data.main || {};
+  const wind = data.wind || {};
+
+  const temp = mainW.temp != null ? Math.round(mainW.temp) : "-";
+  const feels = mainW.feels_like != null ? Math.round(mainW.feels_like) : "-";
+  const hum = mainW.humidity != null ? `${Math.round(mainW.humidity)}%` : "-";
+  const windStr = wind.speed != null ? `${Math.round(wind.speed)} m/s` : "-";
+  const icon = w.icon ? iconUrl(w.icon) : "";
+
+  const card = document.createElement("div");
+  card.className = "weather current";
+  card.innerHTML = `
+    <h2>${icon ? `<img alt="${w.description || ""}" src="${icon}" />` : ""} ${temp !== "-" ? `${temp}°C` : "-"}</h2>
+    <div class="subtitle">${w.description ? (w.description[0].toUpperCase() + w.description.slice(1)) : ""}</div>
+    <div class="meta">
+      <span><strong>Hissedilen:</strong> ${feels !== "-" ? `${feels}°C` : "-"}</span>
+      <span><strong>Nem:</strong> ${hum}</span>
+      <span><strong>Rüzgâr:</strong> ${windStr}</span>
+    </div>
+    <div class="place"><label>${country}</label>, ${name}</div>
+  `;
+  main.appendChild(card);
+}
+
+// 5-gün verisini günlük özetlere çevir (min/maks + temsilî ikon/metin)
+function summarizeDaily(forecast) {
+  // forecast.list: 3 saatlik dilimler (UTC damgalı)
+  const byDate = new Map();
+  for (const item of forecast.list || []) {
+    const date = item.dt_txt?.split(" ")[0]; // "YYYY-MM-DD"
+    if (!date) continue;
+    if (!byDate.has(date)) byDate.set(date, []);
+    byDate.get(date).push(item);
+  }
+
+  // Bugünün kalan saatleri + 4 tam gün ≈ toplam 5 güne indir
+  const dates = Array.from(byDate.keys()).slice(0, 5);
+
+  const days = [];
+  for (const d of dates) {
+    const arr = byDate.get(d);
+    let tmin = Infinity, tmax = -Infinity;
+    let rep = null;
+
+    // 12:00 dilimini tercih, yoksa ortadaki kayıt
+    rep = arr.find(x => x.dt_txt.includes("12:00:00")) || arr[Math.floor(arr.length / 2)];
+
+    for (const x of arr) {
+      const t = x.main?.temp;
+      if (typeof t === "number") {
+        if (t < tmin) tmin = t;
+        if (t > tmax) tmax = t;
+      }
+    }
+    if (tmin === Infinity) tmin = null;
+    if (tmax === -Infinity) tmax = null;
+
+    const icon = rep?.weather?.[0]?.icon;
+    const desc = rep?.weather?.[0]?.description || "";
+
+    days.push({
+      date: d,
+      tmin: tmin != null ? Math.round(tmin) : null,
+      tmax: tmax != null ? Math.round(tmax) : null,
+      icon,
+      desc
+    });
+  }
+  return days;
+}
+
+function renderDaily(forecast) {
+  const days = summarizeDaily(forecast);
+  if (days.length === 0) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "forecast-wrap";
+  wrap.innerHTML = `<h3>5 Günlük Tahmin</h3>`;
+
+  const list = document.createElement("div");
+  list.className = "forecast";
+
+  days.forEach(d => {
+    const dt = new Date(d.date + "T00:00:00");
+    const gun = dt.toLocaleDateString("tr-TR", { weekday: "short" });
+
+    const item = document.createElement("div");
+    item.className = "day";
+    item.innerHTML = `
+      <div class="day-name">${gun}</div>
+      <div class="day-icon">${d.icon ? `<img alt="${d.desc}" src="${iconUrl(d.icon)}" />` : ""}</div>
+      <div class="day-temps">
+        <span class="tmax">${d.tmax != null ? `${d.tmax}°` : "-"}</span>
+        <span class="tmin">${d.tmin != null ? `${d.tmin}°` : "-"}</span>
+      </div>
+      <div class="day-text">${d.desc ? (d.desc[0].toUpperCase() + d.desc.slice(1)) : ""}</div>
+    `;
+    list.appendChild(item);
+  });
+
+  wrap.appendChild(list);
+  main.appendChild(wrap);
+}
+
+// Form akışı: kullanıcı sadece şehir yazar
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const city = (search.value || "").trim();
+  if (!city) {
+    uyariMesaji("Lütfen bir şehir adı girin!");
+    main.innerHTML = "";
+    return;
+  }
+
+  try {
+    setLoading(true);
+
+    // Anlık + Tahmin paralel
+    const [cur, fc] = await Promise.all([fetchCurrent(city), fetchForecast(city)]);
+
+    setLoading(false);
+    main.innerHTML = "";
+    renderCurrent(cur);
+    renderDaily(fc);
+  } catch (err) {
+    console.error(err);
+    setLoading(false);
+    main.innerHTML = "";
+    if (err && err.status === 404) {
+      uyariMesaji("Şehir bulunamadı. Lütfen kontrol edip tekrar deneyin.");
+    } else if (err && err.status === 401) {
+      uyariMesaji("API anahtarı geçersiz ya da yetkisiz görünüyor.");
+    } else {
+      uyariMesaji("Beklenmeyen bir hata oluştu. Daha sonra tekrar deneyin.");
+    }
+  }
+});

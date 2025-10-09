@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>jQuery Selector Örneği</title>
+  <!-- jQuery kütüphanesini dahil et -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<h1 id="baslik">Başlık</h1>
+<p class="intro">Bu bir paragraf, intro sınıfıyla.</p>
+<p class="intro">Bu da başka bir intro paragraf.</p>
+<p>Normal bir paragraf.</p>
+
+<button id="btn1">ID ile Seç</button>
+<button id="btn2">Class ile Seç</button>
+<button id="btn3">Etiket ile Seç</button>
+<button id="btn4">p.intro ile Seç</button>
+
+<div id="sonuc"></div>
+
+<script>
+$(document).ready(function() {
+  
+  $("#btn1").click(function() {
+    // id="baslik" olanı seç ve içeriğini göster
+    const text = $("#baslik").text();
+    $("#sonuc").text("ID seçildi: " + text);
+  });
+
+  $("#btn2").click(function() {
+    // class="intro" olan tüm öğeleri seç, içlerini virgülle birleştir
+    const arr = $(".intro").map(function() {
+      return $(this).text();
+    }).get();
+    $("#sonuc").text("Class seçildi: " + arr.join(" | "));
+  });
+
+  $("#btn3").click(function() {
+    // tüm <p> etiketlerini seç
+    const arr = $("p").map(function() {
+      return $(this).text();
+    }).get();
+    $("#sonuc").text("Etiket p seçildi: " + arr.join(" | "));
+  });
+
+  $("#btn4").click(function() {
+    // p etiketi + intro sınıfı olanları seç
+    const arr = $("p.intro").map(function() {
+      return $(this).text();
+    }).get();
+    $("#sonuc").text("p.intro seçildi: " + arr.join(" | "));
+  });
+
+});
+</script>
+
+</body>
+</html>

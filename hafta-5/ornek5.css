@@ -1,0 +1,8 @@
+/* === CSS === */
+.inpBox{
+    background-color:#FFFFFF;
+    border: solid 1px #666666;
+}
+.inpBoxError{
+    border: solid 2px #FF0000;
+}

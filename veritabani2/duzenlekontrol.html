@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>Güncelleme</title>
+  <?php if ($success): ?>
+    <meta http-equiv="refresh" content="2; url=kayitlar.php">
+  <?php endif; ?>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; padding: 24px; }
+    a { text-decoration: none; }
+  </style>
+</head>
+<body>
+  <b><?php echo htmlspecialchars($message); ?></b><br><br>
+  <?php if (!$success): ?>
+    <a href="kayitlar.php">Kayıtlara Dön</a>
+  <?php else: ?>
+    2 saniye içinde listeye yönlendirileceksiniz. Beklemek istemezseniz
+    <a href="kayitlar.php">buraya tıklayın</a>.
+  <?php endif; ?>
+</body>
+</html>

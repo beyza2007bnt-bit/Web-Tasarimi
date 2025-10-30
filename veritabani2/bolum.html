@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>Veritabanı Kayıt Ekleme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e8f6ff;
+            padding: 40px;
+        }
+        form {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            width: 300px;
+        }
+        input[type="text"] {
+            width: 90%;
+            padding: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #0099cc;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #007799;
+        }
+    </style>
+</head>
+<body>
+
+    <form action="index.php" method="POST">
+        <label>Ad Soyad:</label><br>
+        <input type="text" name="adsoyad" required><br>
+
+        <label>Bölüm:</label><br>
+        <input type="text" name="bolum" required><br>
+
+        <input type="submit" value="Kaydet">
+    </form>
+
+</body>
+</html>

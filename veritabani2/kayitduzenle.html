@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>Düzenle</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; padding: 24px; }
+    input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+    input[type="submit"] { margin-top: 10px; padding: 8px 14px; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Kayıt Düzenle</h1>
+
+  <form action="kontrol.php" method="POST">
+    <label>Ad Soyad: </label>
+    <input type="text" name="adsoyad" value="<?php echo htmlspecialchars($adsoyad); ?>"><br><br>
+
+    <label>Bölüm: </label>
+    <input type="text" name="bolum" value="<?php echo htmlspecialchars($bolum); ?>"><br><br>
+
+    <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>">
+
+    <input type="submit" value="Kaydet">
+  </form>
+
+  <br>
+  <a href="kayitlar.php">Kayıtlara Dön</a>
+</body>
+</html>
